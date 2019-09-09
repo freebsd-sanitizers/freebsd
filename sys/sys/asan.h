@@ -60,8 +60,8 @@ void kasan_init(void);
 void kasan_add_redzone(size_t *);
 void kasan_mark(const void *, size_t, size_t, uint8_t);
 #else
-#define kasan_add_redzone(s)	__nothing
-#define kasan_mark(p, s, l, c)	__nothing
+#define kasan_add_redzone(s)	(void)0
+#define kasan_mark(p, s, l, c)	(void)0
 #endif
 
 #endif /* !_SYS_ASAN_H_ */
