@@ -177,9 +177,7 @@ kasan_report(unsigned long addr, size_t size, bool write, unsigned long pc,
 	    " %s]\n",
 	    (void *)pc, (void *)addr, size, (size > 1 ? "s" : ""),
 	    (write ? "write" : "read"), kasan_code_name(code));
-#ifdef notyet
 	kasan_md_unwind();
-#endif
 }
 
 static __always_inline void

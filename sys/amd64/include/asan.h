@@ -37,6 +37,10 @@
 #error "Only include this from kern/subr_asan.c"
 #endif
 
+#include "opt_stack.h"
+
+#include <sys/stack.h>
+
 #include <vm/vm.h>
 #include <vm/pmap.h>
 #include <vm/vm_param.h>
@@ -66,6 +70,18 @@ kasan_md_unsupported(vm_offset_t addr)
 static inline void
 kasan_md_init(void)
 {
+}
+
+static inline void
+kasan_md_unwind(void)
+{
+#ifdef STACK
+	struct stack st;
+
+	__builtin_memset(&st, 0, sizeof(st));
+	stack_save(&st);
+	stack_print(&st);
+#endif
 }
 
 extern u_int64_t KASANPDphys;
