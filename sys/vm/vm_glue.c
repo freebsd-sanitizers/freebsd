@@ -68,6 +68,7 @@ __FBSDID("$FreeBSD$");
 
 #include <sys/param.h>
 #include <sys/systm.h>
+#include <sys/asan.h>
 #include <sys/domainset.h>
 #include <sys/limits.h>
 #include <sys/lock.h>
@@ -325,7 +326,7 @@ vm_thread_new(struct thread *td, int pages)
 			td->td_kstack_obj = ks_ce->ksobj;
 			td->td_kstack = (vm_offset_t)ks_ce;
 			td->td_kstack_pages = kstack_pages;
-			return (1);
+			goto have_stack;
 		}
 		mtx_unlock(&kstack_cache_mtx);
 	}
@@ -391,6 +392,9 @@ vm_thread_new(struct thread *td, int pages)
 		ma[i]->valid = VM_PAGE_BITS_ALL;
 	VM_OBJECT_WUNLOCK(ksobj);
 	pmap_qenter(ks, ma, pages);
+have_stack:
+	kasan_mark((const void *)td->td_kstack, 0,
+	    td->td_kstack_pages * PAGE_SIZE, KASAN_GENERIC_REDZONE);
 	return (1);
 }
 
@@ -401,6 +405,8 @@ vm_thread_stack_dispose(vm_object_t ksobj, vm_offset_t ks, int pages)
 	int i;
 
 	atomic_add_int(&kstacks, -1);
+	kasan_mark((const void *)ks, 0, pages * PAGE_SIZE,
+	    KASAN_GENERIC_REDZONE);
 	pmap_qremove(ks, pages);
 	VM_OBJECT_WLOCK(ksobj);
 	for (i = 0; i < pages; i++) {
@@ -436,6 +442,8 @@ vm_thread_dispose(struct thread *td)
 	td->td_kstack_pages = 0;
 	if (pages == kstack_pages && kstacks <= kstack_cache_size) {
 		ks_ce = (struct kstack_cache_entry *)ks;
+		kasan_mark(ks_ce, sizeof(*ks_ce), pages * PAGE_SIZE,
+		    KASAN_GENERIC_REDZONE);
 		ks_ce->ksobj = ksobj;
 		mtx_lock(&kstack_cache_mtx);
 		ks_ce->next_ks_entry = kstack_cache;
