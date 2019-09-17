@@ -1,0 +1,8 @@
+#include MINIMAL
+include GENERIC
+
+ident   GENERIC-KASAN
+
+options 	COVERAGE
+options 	KCOV
+options 	KASAN
