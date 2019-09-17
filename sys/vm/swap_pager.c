@@ -74,6 +74,7 @@ __FBSDID("$FreeBSD$");
 #include "opt_vm.h"
 
 #include <sys/param.h>
+#include <sys/asan.h>
 #include <sys/bio.h>
 #include <sys/blist.h>
 #include <sys/buf.h>
@@ -790,6 +791,8 @@ swp_pager_strategy(struct buf *bp)
 			} else {
 				pmap_qenter((vm_offset_t)bp->b_data,
 				    &bp->b_pages[0], bp->b_bcount / PAGE_SIZE);
+				kasan_mark(bp->b_data, bp->b_bcount,
+				    bp->b_bcount, 0);
 			}
 			sp->sw_strategy(bp, sp);
 			return;
@@ -1521,9 +1524,10 @@ swp_pager_async_iodone(struct buf *bp)
 	/*
 	 * remove the mapping for kernel virtual
 	 */
-	if (buf_mapped(bp))
+	if (buf_mapped(bp)) {
+		kasan_mark(bp->b_data, 0, bp->b_bcount, KASAN_POOL_FREED);
 		pmap_qremove((vm_offset_t)bp->b_data, bp->b_npages);
-	else
+	} else
 		bp->b_data = bp->b_kvabase;
 
 	if (bp->b_npages) {

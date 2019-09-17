@@ -60,6 +60,7 @@ __FBSDID("$FreeBSD$");
 #include <sys/param.h>
 #include <sys/kernel.h>
 #include <sys/systm.h>
+#include <sys/asan.h>
 #include <sys/sysctl.h>
 #include <sys/proc.h>
 #include <sys/vnode.h>
@@ -1041,11 +1042,9 @@ vnode_pager_generic_getpages(struct vnode *vp, vm_page_t *m, int count,
 	} else {
 		bp->b_data = bp->b_kvabase;
 		pmap_qenter((vm_offset_t)bp->b_data, bp->b_pages, bp->b_npages);
-#ifdef KASAN
 		/* XXX: Could we tighten this size? */
-		kasan_unpoison((vm_offset_t)bp->b_data,
-		    bp->b_npages * PAGE_SIZE);
-#endif
+		kasan_mark((const void *)trunc_page((vm_offset_t)bp->b_data),
+		    bp->b_npages * PAGE_SIZE, bp->b_npages * PAGE_SIZE, 0);
 	}
 
 	/* Build a minimal buffer header. */
@@ -1123,16 +1122,18 @@ vnode_pager_generic_getpages_done(struct buf *bp)
 			bp->b_data = bp->b_kvabase;
 			pmap_qenter((vm_offset_t)bp->b_data, bp->b_pages,
 			    bp->b_npages);
-#ifdef KASAN
 			/* XXX: Could we tighten this size? */
-			kasan_unpoison((vm_offset_t)bp->b_data,
-			    bp->b_npages * PAGE_SIZE);
-#endif
+			kasan_mark(
+			    (const void *)trunc_page((vm_offset_t)bp->b_data),
+			    bp->b_npages * PAGE_SIZE,
+			    bp->b_npages * PAGE_SIZE, 0);
 		}
 		bzero(bp->b_data + bp->b_bcount,
 		    PAGE_SIZE * bp->b_npages - bp->b_bcount);
 	}
 	if (buf_mapped(bp)) {
+		kasan_mark(bp->b_data, 0, bp->b_npages * PAGE_SIZE,
+		    KASAN_POOL_FREED);
 		pmap_qremove((vm_offset_t)bp->b_data, bp->b_npages);
 		bp->b_data = unmapped_buf;
 	}

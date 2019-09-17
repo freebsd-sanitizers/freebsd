@@ -66,6 +66,7 @@
 
 #include <sys/param.h>
 #include <sys/systm.h>
+#include <sys/asan.h>
 #include <sys/bio.h>
 #include <sys/buf.h>
 #include <sys/conf.h>
@@ -974,6 +975,8 @@ unmapped_step:
 		KASSERT(iolen > 0, ("zero iolen"));
 		pmap_qenter((vm_offset_t)pb->b_data,
 		    &bp->bio_ma[atop(ma_offs)], npages);
+		kasan_mark(pb->b_data, npages * PAGE_SIZE,
+		    npages * PAGE_SIZE, 0);
 		aiov.iov_base = (void *)((vm_offset_t)pb->b_data +
 		    (ma_offs & PAGE_MASK));
 		aiov.iov_len = iolen;
@@ -1008,6 +1011,7 @@ unmapped_step:
 		    POSIX_FADV_DONTNEED);
 
 	if (pb != NULL) {
+		kasan_mark(pb->b_data, 0, npages * PAGE_SIZE, KASAN_POOL_FREED);
 		pmap_qremove((vm_offset_t)pb->b_data, npages);
 		if (error == 0) {
 			len -= iolen;
