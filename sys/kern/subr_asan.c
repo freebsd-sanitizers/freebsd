@@ -248,6 +248,9 @@ kasan_mark(const void *addr, size_t size, size_t sz_with_redz, uint8_t code)
 	if (__predict_false(kasan_md_unsupported((vm_offset_t)addr)))
 		return;
 
+	KASSERT(size <= sz_with_redz, ("kasan_mark: "
+	    "The size (%zu) must be less than the size with redzone (%zu)",
+	    size, sz_with_redz));
 	KASSERT((vm_offset_t)addr % KASAN_SHADOW_SCALE_SIZE == 0,
 	    ("kasan_mark: Address %p is incorrectly aligned", addr));
 	redz = sz_with_redz - roundup(size, KASAN_SHADOW_SCALE_SIZE);
