@@ -109,10 +109,12 @@ kasan_shadow_map(void *addr, size_t size)
 
 	npages = (eva - sva) / PAGE_SIZE;
 
+#if 0
 	KASSERT(sva >= KASAN_MD_SHADOW_START,
 	    ("kasan_shadow_map: Start virtual address %jx is invalid", sva));
 	KASSERT(eva < KASAN_MD_SHADOW_END,
 	    ("kasan_shadow_map: End virtual address %jx is invalid", eva));
+#endif
 
 	for (i = 0; i < npages; i++) {
 		kasan_md_shadow_map_page(sva + i * PAGE_SIZE);
