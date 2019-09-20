@@ -3020,9 +3020,10 @@ vfs_vmio_truncate(struct buf *bp, int desiredpages)
 		BUF_CHECK_MAPPED(bp);
 		va = trunc_page((vm_offset_t)bp->b_data) +
 		    (desiredpages << PAGE_SHIFT);
-		kasan_mark((const void *)va, 0, bp->b_npages * PAGE_SIZE, KASAN_POOL_FREED);
-		pmap_qremove((vm_offset_t)trunc_page((vm_offset_t)bp->b_data) +
-		    (desiredpages << PAGE_SHIFT), bp->b_npages - desiredpages);
+		kasan_mark((const void *)va, 0,
+		    (bp->b_npages - desiredpages) * PAGE_SIZE,
+		    KASAN_POOL_FREED);
+		pmap_qremove(va, bp->b_npages - desiredpages);
 	} else
 		BUF_CHECK_UNMAPPED(bp);
 
