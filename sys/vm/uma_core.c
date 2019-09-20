@@ -946,8 +946,14 @@ keg_free_slab(uma_keg_t keg, uma_slab_t slab, int start)
 		if (!uma_dbg_kskip(keg, slab->us_data + (keg->uk_rsize * i)) ||
 		    keg->uk_fini != trash_fini)
 #endif
+		{
+			kasan_mark(slab->us_data + (keg->uk_rsize * i),
+			    keg->uk_size, keg->uk_size, 0);
 			keg->uk_fini(slab->us_data + (keg->uk_rsize * i),
 			    keg->uk_size);
+			kasan_mark(slab->us_data + (keg->uk_rsize * i),
+			    0, keg->uk_size, KASAN_POOL_FREED);
+		}
 	}
 	if (keg->uk_flags & UMA_ZONE_OFFPAGE)
 		zone_free_item(keg->uk_slabzone, slab, NULL, SKIP_NONE);
@@ -2418,6 +2424,7 @@ zalloc_start:
 		KASSERT(item != NULL, ("uma_zalloc: Bucket pointer mangled."));
 		cache->uc_allocs++;
 		critical_exit();
+		kasan_mark(item, zone->uz_size, zone->uz_size, 0);
 #ifdef INVARIANTS
 		skipdbg = uma_dbg_zskip(zone, item);
 #endif
@@ -2434,9 +2441,6 @@ zalloc_start:
 #ifdef INVARIANTS
 		if (!skipdbg)
 			uma_dbg_alloc(zone, NULL, item);
-#endif
-#ifdef KASAN
-               //kasan_unpoison((vm_offset_t)item, zone->uz_size);
 #endif
 		if (flags & M_ZERO)
 			uma_zero_item(item, zone);
@@ -3291,8 +3295,9 @@ zone_free_item(uma_zone_t zone, void *item, void *udata, enum zfreeskip skip)
 #ifdef INVARIANTS
 	bool skipdbg;
 #endif
-
-	kasan_mark(item, 0, zone->uz_size, KASAN_POOL_FREED);
+#ifdef KASAN
+	void *orig_item = item;
+#endif
 
 #ifdef INVARIANTS
 	skipdbg = uma_dbg_zskip(zone, item);
@@ -3315,6 +3320,8 @@ zone_free_item(uma_zone_t zone, void *item, void *udata, enum zfreeskip skip)
 		zone->uz_fini(item, zone->uz_size);
 
 	zone->uz_release(zone->uz_arg, &item, 1);
+
+	kasan_mark(orig_item, 0, zone->uz_size, KASAN_POOL_FREED);
 
 	if (skip & SKIP_CNT)
 		return;
