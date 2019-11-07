@@ -29,8 +29,6 @@
 #ifndef	_MACHINE_ATOMIC_H_
 #define	_MACHINE_ATOMIC_H_
 
-#include <sys/atomic_common.h>
-
 #define	isb()		__asm __volatile("isb" : : : "memory")
 
 /*
@@ -54,6 +52,12 @@
 #define	mb()	dmb(sy)	/* Full system memory barrier all */
 #define	wmb()	dmb(st)	/* Full system memory barrier store */
 #define	rmb()	dmb(ld)	/* Full system memory barrier load */
+
+#if defined(KCSAN) && !defined(KCSAN_RUNTIME)
+#include <sys/_cscan_atomic.h>
+#else
+
+#include <sys/atomic_common.h>
 
 #define	ATOMIC_OP(op, asm_op, bar, a, l)				\
 static __inline void							\
@@ -572,6 +576,8 @@ atomic_store_rel_64(volatile uint64_t *p, uint64_t val)
 #define	atomic_set_rel_ptr		atomic_set_rel_64
 #define	atomic_subtract_rel_ptr		atomic_subtract_rel_64
 #define	atomic_store_rel_ptr		atomic_store_rel_64
+
+#endif /* KCSAN && !KCSAN_RUNTIME */
 
 static __inline void
 atomic_thread_fence_acq(void)

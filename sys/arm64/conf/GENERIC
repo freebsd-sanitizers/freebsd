@@ -25,7 +25,7 @@ makeoptions	DEBUG=-g		# Build kernel with gdb(1) debug symbols
 makeoptions	WITH_CTF=1		# Run ctfconvert(1) for DTrace support
 
 options 	SCHED_ULE		# ULE scheduler
-options 	NUMA			# Non-Uniform Memory Architecture support
+#options 	NUMA			# Non-Uniform Memory Architecture support
 options 	PREEMPTION		# Enable kernel thread preemption
 options 	VIMAGE			# Subsystem virtualization, e.g. VNET
 options 	INET			# InterNETworking
@@ -99,6 +99,7 @@ options 	VERBOSE_SYSINIT=0	# Support debug.verbose_sysinit, off by default
 #options 	KCOV			# Kernel Coverage Sanitizer
 # Warning: KUBSAN can result in a kernel too large for loader to load
 #options 	KUBSAN			# Kernel Undefined Behavior Sanitizer
+options 	KCSAN			# Kernel Concurrency Sanitizer
 
 # Kernel dump features.
 options 	EKCD			# Support for encrypted kernel dumps
