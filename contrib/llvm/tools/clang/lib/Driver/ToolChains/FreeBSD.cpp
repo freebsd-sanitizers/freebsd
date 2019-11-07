@@ -421,10 +421,10 @@ SanitizerMask FreeBSD::getSupportedSanitizers() const {
   Res |= SanitizerKind::Address;
   Res |= SanitizerKind::PointerCompare;
   Res |= SanitizerKind::PointerSubtract;
+  Res |= SanitizerKind::Thread;
   Res |= SanitizerKind::Vptr;
   if (IsX86_64 || IsMIPS64) {
     Res |= SanitizerKind::Leak;
-    Res |= SanitizerKind::Thread;
   }
   if (IsX86 || IsX86_64) {
     Res |= SanitizerKind::Function;
