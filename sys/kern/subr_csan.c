@@ -41,11 +41,11 @@ __FBSDID("$FreeBSD$");
 #include <sys/kernel.h>
 #include <sys/bus.h>
 #include <sys/conf.h>
-#include <sys/systm.h>
-#include <sys/types.h>
-#include <sys/csan.h>
 #include <sys/cpu.h>
+#include <sys/csan.h>
+#include <sys/proc.h>
 #include <sys/smp.h>
+#include <sys/systm.h>
 
 #include <ddb/ddb.h>
 #include <ddb/db_sym.h>
@@ -62,6 +62,7 @@ typedef struct {
 	bool write:1;
 	bool atomic:1;
 	uintptr_t pc;
+	struct thread *td;
 } csan_cell_t;
 
 typedef struct {
@@ -146,21 +147,28 @@ kcsan_access(uintptr_t addr, size_t size, bool write, bool atomic, uintptr_t pc)
 {
 	csan_cell_t old, new;
 	csan_cpu_t *cpu;
+	struct thread *td;
 	uint64_t intr;
 	size_t i;
 
 	if (__predict_false(!kcsan_enabled))
 		return;
 
+	td = curthread;
+
 	new.addr = addr;
 	new.size = size;
 	new.write = write;
 	new.atomic = atomic;
 	new.pc = pc;
+	new.td = td;
 
 	CPU_FOREACH(i) {
 		__builtin_memcpy(&old, &kcsan_cpus[i].cell, sizeof(old));
 
+		/* Assume we can't race with ourself */
+		if (old.td == td)
+			continue;
 		if (old.addr + old.size <= new.addr)
 			continue;
 		if (new.addr + new.size <= old.addr)
