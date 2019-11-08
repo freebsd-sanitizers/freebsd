@@ -2754,7 +2754,7 @@ static struct aiocb_ops aiocb32_ops = {
 
 #ifdef COMPAT_FREEBSD6
 static struct aiocb_ops aiocb32_ops_osigevent = {
-	.copyin = aiocb32_copyin_old_sigevent,
+	.aio_copyin = aiocb32_copyin_old_sigevent,
 	.fetch_status = aiocb32_fetch_status,
 	.fetch_error = aiocb32_fetch_error,
 	.store_status = aiocb32_store_status,
