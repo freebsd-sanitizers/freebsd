@@ -560,7 +560,11 @@ CSAN_ATOMIC_FUNC_ADD(16, uint16_t)
 CSAN_ATOMIC_FUNC_CLEAR(16, uint16_t)
 CSAN_ATOMIC_FUNC_CMPSET(16, uint16_t)
 CSAN_ATOMIC_FUNC_FCMPSET(16, uint16_t)
+#if defined(__aarch64__)
 _CSAN_ATOMIC_FUNC_LOAD(16, uint16_t)
+#else
+CSAN_ATOMIC_FUNC_LOAD(16, uint16_t)
+#endif
 CSAN_ATOMIC_FUNC_SET(16, uint16_t)
 CSAN_ATOMIC_FUNC_SUBTRACT(16, uint16_t)
 _CSAN_ATOMIC_FUNC_STORE(16, uint16_t)
@@ -653,6 +657,18 @@ CSAN_ATOMIC_FUNC_SWAP(ptr, uintptr_t)
 CSAN_ATOMIC_FUNC_TESTANDCLEAR(ptr, uintptr_t)
 CSAN_ATOMIC_FUNC_TESTANDSET(ptr, uintptr_t)
 #endif
+
+#define	CSAN_ATOMIC_FUNC_THREAD_FENCE(name)				\
+	void kcsan_atomic_thread_fence_##name(void)			\
+	{								\
+		atomic_thread_fence_##name();				\
+	}
+
+
+CSAN_ATOMIC_FUNC_THREAD_FENCE(acq)
+CSAN_ATOMIC_FUNC_THREAD_FENCE(acq_rel)
+CSAN_ATOMIC_FUNC_THREAD_FENCE(rel)
+CSAN_ATOMIC_FUNC_THREAD_FENCE(seq_cst)
 
 #if 0
 /* -------------------------------------------------------------------------- */

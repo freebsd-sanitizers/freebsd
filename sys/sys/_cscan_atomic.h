@@ -94,6 +94,11 @@ KCSAN_ATOMIC_FUNCS(16, uint16_t);
 KCSAN_ATOMIC_FUNCS(32, uint32_t);
 KCSAN_ATOMIC_FUNCS(64, uint64_t);
 
+void	kcsan_atomic_thread_fence_acq(void);
+void	kcsan_atomic_thread_fence_acq_rel(void);
+void	kcsan_atomic_thread_fence_rel(void);
+void	kcsan_atomic_thread_fence_seq_cst(void);
+
 #ifndef KCSAN_RUNTIME
 
 #define	atomic_add_int			kcsan_atomic_add_int
@@ -291,6 +296,11 @@ KCSAN_ATOMIC_FUNCS(64, uint64_t);
 #define	atomic_swap_64			kcsan_atomic_swap_64
 #define	atomic_testandclear_64		kcsan_atomic_testandclear_64
 #define	atomic_testandset_64		kcsan_atomic_testandset_64
+
+#define	atomic_thread_fence_acq		kcsan_atomic_thread_fence_acq
+#define	atomic_thread_fence_acq_rel	kcsan_atomic_thread_fence_acq_rel
+#define	atomic_thread_fence_rel		kcsan_atomic_thread_fence_rel
+#define	atomic_thread_fence_seq_cst	kcsan_atomic_thread_fence_seq_cst
 
 #endif /* !KCSAN_RUNTIME */
 

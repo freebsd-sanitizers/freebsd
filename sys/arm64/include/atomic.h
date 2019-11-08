@@ -577,8 +577,6 @@ atomic_store_rel_64(volatile uint64_t *p, uint64_t val)
 #define	atomic_subtract_rel_ptr		atomic_subtract_rel_64
 #define	atomic_store_rel_ptr		atomic_store_rel_64
 
-#endif /* KCSAN && !KCSAN_RUNTIME */
-
 static __inline void
 atomic_thread_fence_acq(void)
 {
@@ -606,6 +604,8 @@ atomic_thread_fence_seq_cst(void)
 
 	dmb(sy);
 }
+
+#endif /* KCSAN && !KCSAN_RUNTIME */
 
 #endif /* _MACHINE_ATOMIC_H_ */
 
