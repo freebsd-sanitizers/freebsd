@@ -670,151 +670,190 @@ CSAN_ATOMIC_FUNC_THREAD_FENCE(acq_rel)
 CSAN_ATOMIC_FUNC_THREAD_FENCE(rel)
 CSAN_ATOMIC_FUNC_THREAD_FENCE(seq_cst)
 
-#if 0
 /* -------------------------------------------------------------------------- */
 
 #include <sys/bus.h>
+#include <machine/bus.h>
+#include <sys/_cscan_bus.h>
 
-#undef bus_space_read_multi_1
-#undef bus_space_read_multi_2
-#undef bus_space_read_multi_4
-#undef bus_space_read_multi_8
-#undef bus_space_read_multi_stream_1
-#undef bus_space_read_multi_stream_2
-#undef bus_space_read_multi_stream_4
-#undef bus_space_read_multi_stream_8
-#undef bus_space_read_region_1
-#undef bus_space_read_region_2
-#undef bus_space_read_region_4
-#undef bus_space_read_region_8
-#undef bus_space_read_region_stream_1
-#undef bus_space_read_region_stream_2
-#undef bus_space_read_region_stream_4
-#undef bus_space_read_region_stream_8
-#undef bus_space_write_multi_1
-#undef bus_space_write_multi_2
-#undef bus_space_write_multi_4
-#undef bus_space_write_multi_8
-#undef bus_space_write_multi_stream_1
-#undef bus_space_write_multi_stream_2
-#undef bus_space_write_multi_stream_4
-#undef bus_space_write_multi_stream_8
-#undef bus_space_write_region_1
-#undef bus_space_write_region_2
-#undef bus_space_write_region_4
-#undef bus_space_write_region_8
-#undef bus_space_write_region_stream_1
-#undef bus_space_write_region_stream_2
-#undef bus_space_write_region_stream_4
-#undef bus_space_write_region_stream_8
+int
+kcsan_bus_space_map(bus_space_tag_t tag, bus_addr_t hnd, bus_size_t size,
+    int flags, bus_space_handle_t *handlep)
+{
 
-#define CSAN_BUS_READ_FUNC(bytes, bits) \
-	void bus_space_read_multi_##bytes(bus_space_tag_t, bus_space_handle_t,	\
-	    bus_size_t, uint##bits##_t *, bus_size_t);				\
-	void kcsan_bus_space_read_multi_##bytes(bus_space_tag_t,		\
-	    bus_space_handle_t, bus_size_t, uint##bits##_t *, bus_size_t);	\
-	void kcsan_bus_space_read_multi_##bytes(bus_space_tag_t tag,		\
-	    bus_space_handle_t hnd, bus_size_t size, uint##bits##_t *buf,	\
-	    bus_size_t count)							\
-	{									\
-		kcsan_access((uintptr_t)buf, sizeof(uint##bits##_t) * count,	\
-		    false, false, __RET_ADDR);					\
-		bus_space_read_multi_##bytes(tag, hnd, size, buf, count);	\
-	}									\
-	void bus_space_read_multi_stream_##bytes(bus_space_tag_t,		\
-	    bus_space_handle_t, bus_size_t, uint##bits##_t *, bus_size_t);	\
-	void kcsan_bus_space_read_multi_stream_##bytes(bus_space_tag_t,		\
-	    bus_space_handle_t, bus_size_t, uint##bits##_t *, bus_size_t);	\
-	void kcsan_bus_space_read_multi_stream_##bytes(bus_space_tag_t tag,	\
-	    bus_space_handle_t hnd, bus_size_t size, uint##bits##_t *buf,	\
-	    bus_size_t count)							\
-	{									\
-		kcsan_access((uintptr_t)buf, sizeof(uint##bits##_t) * count,	\
-		    false, false, __RET_ADDR);					\
-		bus_space_read_multi_stream_##bytes(tag, hnd, size, buf, count);\
-	}									\
-	void bus_space_read_region_##bytes(bus_space_tag_t, bus_space_handle_t,	\
-	    bus_size_t, uint##bits##_t *, bus_size_t);				\
-	void kcsan_bus_space_read_region_##bytes(bus_space_tag_t,		\
-	    bus_space_handle_t, bus_size_t, uint##bits##_t *, bus_size_t);	\
-	void kcsan_bus_space_read_region_##bytes(bus_space_tag_t tag,		\
-	    bus_space_handle_t hnd, bus_size_t size, uint##bits##_t *buf,	\
-	    bus_size_t count)							\
-	{									\
-		kcsan_access((uintptr_t)buf, sizeof(uint##bits##_t) * count,	\
-		    false, false, __RET_ADDR);					\
-		bus_space_read_region_##bytes(tag, hnd, size, buf, count);	\
-	}									\
-	void bus_space_read_region_stream_##bytes(bus_space_tag_t,		\
-	    bus_space_handle_t, bus_size_t, uint##bits##_t *, bus_size_t);	\
-	void kcsan_bus_space_read_region_stream_##bytes(bus_space_tag_t,	\
-	    bus_space_handle_t, bus_size_t, uint##bits##_t *, bus_size_t);	\
-	void kcsan_bus_space_read_region_stream_##bytes(bus_space_tag_t tag,	\
-	    bus_space_handle_t hnd, bus_size_t size, uint##bits##_t *buf,	\
-	    bus_size_t count)							\
-	{									\
-		kcsan_access((uintptr_t)buf, sizeof(uint##bits##_t) * count,	\
-		    false, false, __RET_ADDR);					\
-		bus_space_read_region_stream_##bytes(tag, hnd, size, buf, count);\
-	}
+	return (bus_space_map(tag, hnd, size, flags, handlep));
+}
 
-#define CSAN_BUS_WRITE_FUNC(bytes, bits) \
-	void bus_space_write_multi_##bytes(bus_space_tag_t, bus_space_handle_t,	\
-	    bus_size_t, const uint##bits##_t *, bus_size_t);			\
-	void kcsan_bus_space_write_multi_##bytes(bus_space_tag_t,		\
-	    bus_space_handle_t, bus_size_t, const uint##bits##_t *, bus_size_t);\
-	void kcsan_bus_space_write_multi_##bytes(bus_space_tag_t tag,		\
-	    bus_space_handle_t hnd, bus_size_t size, const uint##bits##_t *buf,	\
-	    bus_size_t count)							\
-	{									\
-		kcsan_access((uintptr_t)buf, sizeof(uint##bits##_t) * count,	\
-		    true, false, __RET_ADDR);					\
-		bus_space_write_multi_##bytes(tag, hnd, size, buf, count);	\
-	}									\
-	void bus_space_write_multi_stream_##bytes(bus_space_tag_t,		\
-	    bus_space_handle_t, bus_size_t, const uint##bits##_t *, bus_size_t);\
-	void kcsan_bus_space_write_multi_stream_##bytes(bus_space_tag_t,	\
-	    bus_space_handle_t, bus_size_t, const uint##bits##_t *, bus_size_t);\
-	void kcsan_bus_space_write_multi_stream_##bytes(bus_space_tag_t tag,	\
-	    bus_space_handle_t hnd, bus_size_t size, const uint##bits##_t *buf,	\
-	    bus_size_t count)							\
-	{									\
-		kcsan_access((uintptr_t)buf, sizeof(uint##bits##_t) * count,	\
-		    true, false, __RET_ADDR);					\
-		bus_space_write_multi_stream_##bytes(tag, hnd, size, buf, count);\
-	}									\
-	void bus_space_write_region_##bytes(bus_space_tag_t, bus_space_handle_t,\
-	    bus_size_t, const uint##bits##_t *, bus_size_t);			\
-	void kcsan_bus_space_write_region_##bytes(bus_space_tag_t,		\
-	    bus_space_handle_t, bus_size_t, const uint##bits##_t *, bus_size_t);\
-	void kcsan_bus_space_write_region_##bytes(bus_space_tag_t tag,		\
-	    bus_space_handle_t hnd, bus_size_t size, const uint##bits##_t *buf,	\
-	    bus_size_t count)							\
-	{									\
-		kcsan_access((uintptr_t)buf, sizeof(uint##bits##_t) * count,	\
-		    true, false, __RET_ADDR);					\
-		bus_space_write_region_##bytes(tag, hnd, size, buf, count);	\
-	}									\
-	void bus_space_write_region_stream_##bytes(bus_space_tag_t,		\
-	    bus_space_handle_t, bus_size_t, const uint##bits##_t *, bus_size_t);\
-	void kcsan_bus_space_write_region_stream_##bytes(bus_space_tag_t,	\
-	    bus_space_handle_t, bus_size_t, const uint##bits##_t *, bus_size_t);\
-	void kcsan_bus_space_write_region_stream_##bytes(bus_space_tag_t tag,	\
-	    bus_space_handle_t hnd, bus_size_t size, const uint##bits##_t *buf,	\
-	    bus_size_t count)							\
-	{									\
-		kcsan_access((uintptr_t)buf, sizeof(uint##bits##_t) * count,	\
-		    true, false, __RET_ADDR);					\
-		bus_space_write_region_stream_##bytes(tag, hnd, size, buf, count);\
-	}
+void
+kcsan_bus_space_unmap(bus_space_tag_t tag, bus_space_handle_t hnd,
+    bus_size_t size)
+{
 
-CSAN_BUS_READ_FUNC(1, 8)
-CSAN_BUS_READ_FUNC(2, 16)
-CSAN_BUS_READ_FUNC(4, 32)
-CSAN_BUS_READ_FUNC(8, 64)
+	bus_space_unmap(tag, hnd, size);
+}
 
-CSAN_BUS_WRITE_FUNC(1, 8)
-CSAN_BUS_WRITE_FUNC(2, 16)
-CSAN_BUS_WRITE_FUNC(4, 32)
-CSAN_BUS_WRITE_FUNC(8, 64)
+int
+kcsan_bus_space_subregion(bus_space_tag_t tag, bus_space_handle_t hnd,
+    bus_size_t offset, bus_size_t size, bus_space_handle_t *handlep)
+{
+
+	return (bus_space_subregion(tag, hnd, offset, size, handlep));
+}
+
+#if !defined(__amd64__)
+int
+kcsan_bus_space_alloc(bus_space_tag_t tag, bus_addr_t reg_start,
+    bus_addr_t reg_end, bus_size_t size, bus_size_t alignment,
+    bus_size_t boundary, int flags, bus_addr_t *addrp,
+    bus_space_handle_t *handlep)
+{
+
+	return (bus_space_alloc(tag, reg_start, reg_end, size, alignment,
+	    boundary, flags, addrp, handlep));
+}
 #endif
+
+void
+kcsan_bus_space_free(bus_space_tag_t tag, bus_space_handle_t hnd,
+    bus_size_t size)
+{
+
+	bus_space_free(tag, hnd, size);
+}
+
+void
+kcsan_bus_space_barrier(bus_space_tag_t tag, bus_space_handle_t hnd,
+    bus_size_t offset, bus_size_t size, int flags)
+{
+
+	bus_space_barrier(tag, hnd, offset, size, flags);
+}
+
+#define CSAN_BUS_READ_FUNC(func, width, type)				\
+	type kcsan_bus_space_read##func##_##width(bus_space_tag_t tag,	\
+	    bus_space_handle_t hnd, bus_size_t offset)			\
+	{								\
+		return (bus_space_read##func##_##width(tag, hnd,	\
+		    offset));						\
+	}								\
+
+#define CSAN_BUS_READ_PTR_FUNC(func, width, type)			\
+	void kcsan_bus_space_read_##func##_##width(bus_space_tag_t tag,	\
+	    bus_space_handle_t hnd, bus_size_t size, type *buf,		\
+	    bus_size_t count)						\
+	{								\
+		kcsan_access((uintptr_t)buf, sizeof(type) * count,	\
+		    false, false, __RET_ADDR);				\
+		bus_space_read_##func##_##width(tag, hnd, size, buf, 	\
+		    count);						\
+	}
+
+CSAN_BUS_READ_FUNC(, 1, uint8_t)
+CSAN_BUS_READ_FUNC(_stream, 1, uint8_t)
+CSAN_BUS_READ_PTR_FUNC(multi, 1, uint8_t)
+CSAN_BUS_READ_PTR_FUNC(multi_stream, 1, uint8_t)
+CSAN_BUS_READ_PTR_FUNC(region, 1, uint8_t)
+CSAN_BUS_READ_PTR_FUNC(region_stream, 1, uint8_t)
+
+CSAN_BUS_READ_FUNC(, 2, uint16_t)
+CSAN_BUS_READ_FUNC(_stream, 2, uint16_t)
+CSAN_BUS_READ_PTR_FUNC(multi, 2, uint16_t)
+CSAN_BUS_READ_PTR_FUNC(multi_stream, 2, uint16_t)
+CSAN_BUS_READ_PTR_FUNC(region, 2, uint16_t)
+CSAN_BUS_READ_PTR_FUNC(region_stream, 2, uint16_t)
+
+CSAN_BUS_READ_FUNC(, 4, uint32_t)
+CSAN_BUS_READ_FUNC(_stream, 4, uint32_t)
+CSAN_BUS_READ_PTR_FUNC(multi, 4, uint32_t)
+CSAN_BUS_READ_PTR_FUNC(multi_stream, 4, uint32_t)
+CSAN_BUS_READ_PTR_FUNC(region, 4, uint32_t)
+CSAN_BUS_READ_PTR_FUNC(region_stream, 4, uint32_t)
+
+CSAN_BUS_READ_FUNC(, 8, uint64_t)
+#if defined(__aarch64__)
+CSAN_BUS_READ_FUNC(_stream, 8, uint64_t)
+CSAN_BUS_READ_PTR_FUNC(multi, 8, uint64_t)
+CSAN_BUS_READ_PTR_FUNC(multi_stream, 8, uint64_t)
+CSAN_BUS_READ_PTR_FUNC(region, 8, uint64_t)
+CSAN_BUS_READ_PTR_FUNC(region_stream, 8, uint64_t)
+#endif
+
+#define CSAN_BUS_WRITE_FUNC(func, width, type)				\
+	void kcsan_bus_space_write##func##_##width(bus_space_tag_t tag,		\
+	    bus_space_handle_t hnd, bus_size_t offset, type value)	\
+	{								\
+		bus_space_write##func##_##width(tag, hnd, offset, value); \
+	}								\
+
+#define CSAN_BUS_WRITE_PTR_FUNC(func, width, type)			\
+	void kcsan_bus_space_write_##func##_##width(bus_space_tag_t tag, \
+	    bus_space_handle_t hnd, bus_size_t size, const type *buf,	\
+	    bus_size_t count)						\
+	{								\
+		kcsan_access((uintptr_t)buf, sizeof(type) * count,	\
+		    true, false, __RET_ADDR);				\
+		bus_space_write_##func##_##width(tag, hnd, size, buf, 	\
+		    count);						\
+	}
+
+CSAN_BUS_WRITE_FUNC(, 1, uint8_t)
+CSAN_BUS_WRITE_FUNC(_stream, 1, uint8_t)
+CSAN_BUS_WRITE_PTR_FUNC(multi, 1, uint8_t)
+CSAN_BUS_WRITE_PTR_FUNC(multi_stream, 1, uint8_t)
+CSAN_BUS_WRITE_PTR_FUNC(region, 1, uint8_t)
+CSAN_BUS_WRITE_PTR_FUNC(region_stream, 1, uint8_t)
+
+CSAN_BUS_WRITE_FUNC(, 2, uint16_t)
+CSAN_BUS_WRITE_FUNC(_stream, 2, uint16_t)
+CSAN_BUS_WRITE_PTR_FUNC(multi, 2, uint16_t)
+CSAN_BUS_WRITE_PTR_FUNC(multi_stream, 2, uint16_t)
+CSAN_BUS_WRITE_PTR_FUNC(region, 2, uint16_t)
+CSAN_BUS_WRITE_PTR_FUNC(region_stream, 2, uint16_t)
+
+CSAN_BUS_WRITE_FUNC(, 4, uint32_t)
+CSAN_BUS_WRITE_FUNC(_stream, 4, uint32_t)
+CSAN_BUS_WRITE_PTR_FUNC(multi, 4, uint32_t)
+CSAN_BUS_WRITE_PTR_FUNC(multi_stream, 4, uint32_t)
+CSAN_BUS_WRITE_PTR_FUNC(region, 4, uint32_t)
+CSAN_BUS_WRITE_PTR_FUNC(region_stream, 4, uint32_t)
+
+CSAN_BUS_WRITE_FUNC(, 8, uint64_t)
+#if defined(__aarch64__)
+CSAN_BUS_WRITE_FUNC(_stream, 8, uint64_t)
+CSAN_BUS_WRITE_PTR_FUNC(multi, 8, uint64_t)
+CSAN_BUS_WRITE_PTR_FUNC(multi_stream, 8, uint64_t)
+CSAN_BUS_WRITE_PTR_FUNC(region, 8, uint64_t)
+CSAN_BUS_WRITE_PTR_FUNC(region_stream, 8, uint64_t)
+#endif
+
+#define CSAN_BUS_SET_FUNC(func, width, type)				\
+	void kcsan_bus_space_set_##func##_##width(bus_space_tag_t tag,	\
+	    bus_space_handle_t hnd, bus_size_t offset, type value,	\
+	    bus_size_t count)						\
+	{								\
+		bus_space_set_##func##_##width(tag, hnd, offset, value,	\
+		    count);						\
+	}
+
+CSAN_BUS_SET_FUNC(multi, 1, uint8_t)
+CSAN_BUS_SET_FUNC(multi_stream, 1, uint8_t)
+CSAN_BUS_SET_FUNC(region, 1, uint8_t)
+CSAN_BUS_SET_FUNC(region_stream, 1, uint8_t)
+
+CSAN_BUS_SET_FUNC(multi, 2, uint16_t)
+CSAN_BUS_SET_FUNC(multi_stream, 2, uint16_t)
+CSAN_BUS_SET_FUNC(region, 2, uint16_t)
+CSAN_BUS_SET_FUNC(region_stream, 2, uint16_t)
+
+CSAN_BUS_SET_FUNC(multi, 4, uint32_t)
+CSAN_BUS_SET_FUNC(multi_stream, 4, uint32_t)
+CSAN_BUS_SET_FUNC(region, 4, uint32_t)
+CSAN_BUS_SET_FUNC(region_stream, 4, uint32_t)
+
+#if !defined(__amd64__)
+CSAN_BUS_SET_FUNC(multi, 8, uint64_t)
+CSAN_BUS_SET_FUNC(multi_stream, 8, uint64_t)
+CSAN_BUS_SET_FUNC(region, 8, uint64_t)
+CSAN_BUS_SET_FUNC(region_stream, 8, uint64_t)
+#endif
+
