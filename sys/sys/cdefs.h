@@ -245,6 +245,12 @@
 #define	__alignof(x)	__offsetof(struct { char __a; x __b; }, __b)
 #endif
 
+#ifdef KCFI
+#define	__nocfi	__attribute__((__no_sanitize__("cfi")))
+#else
+#define	__nocfi
+#endif
+
 /*
  * Keywords added in C11.
  */

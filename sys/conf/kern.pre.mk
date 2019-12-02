@@ -137,6 +137,11 @@ SAN_CFLAGS+=	-fsanitize-coverage=trace-pc
 .endif
 .endif
 
+KCFI_ENABLED!=	grep KCFI opt_global.h || true ; echo
+.if !empty(KCFI_ENABLED)
+SAN_CFLAGS+=	-flto -fvisibility=default -fsanitize=cfi -fsanitize-recover=cfi -fno-sanitize-trap=cfi -fno-sanitize-blacklist
+.endif
+
 CFLAGS+=	${SAN_CFLAGS}
 
 GCOV_ENABLED!=	grep GCOV opt_global.h || true ; echo

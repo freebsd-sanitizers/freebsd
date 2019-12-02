@@ -75,9 +75,9 @@ svm_support.o:
 	    ${.IMPSRC} -o ${.TARGET}
 
 vmx_genassym.o: offset.inc
-	${CC} -c ${CFLAGS:N-flto:N-fno-common} ${.IMPSRC}
+	${CC} -c ${CFLAGS:N-flto:N-fno-common:N-fsanitize=cfi} ${.IMPSRC}
 
 svm_genassym.o: offset.inc
-	${CC} -c ${CFLAGS:N-flto:N-fno-common} ${.IMPSRC}
+	${CC} -c ${CFLAGS:N-flto:N-fno-common:N-fsanitize=cfi} ${.IMPSRC}
 
 .include <bsd.kmod.mk>
