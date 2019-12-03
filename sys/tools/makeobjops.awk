@@ -297,7 +297,7 @@ function handle_method (static, doc)
 	firstvar = varnames[1];
 
 	if (default_function == "")
-		default_function = "kobj_error_method";
+		default_function = "NULL";
 
 	# the method description 
 	printh("/** @brief Unique descriptor for the " umname "() method */");
@@ -334,6 +334,17 @@ function handle_method (static, doc)
 		printh(prolog);
 	printh("\tKOBJOPLOOKUP(" firstvar "->ops," mname ");");
 	rceq = (ret != "void") ? "rc = " : "";
+	if (default_function == "NULL") {
+		printh("\tif (_m == NULL)");
+		if (ret != "void") {
+			if (substr(ret, length(ret)) == "*" ||
+			    ret == "caddr_t" || ret == "gss_OID")
+				printh("\t\treturn (NULL);");
+			else
+				printh("\t\treturn (kobj_error_method());");
+		} else
+			printh("\t\treturn;");
+	}
 	printh("\t" rceq "((" mname "_t *) _m)(" varname_list ");");
 	if (epilog != "")
 		printh(epilog);
