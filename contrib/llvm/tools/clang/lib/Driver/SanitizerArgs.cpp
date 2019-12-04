@@ -556,7 +556,10 @@ SanitizerArgs::SanitizerArgs(const ToolChain &TC,
 
   // Setup blacklist files.
   // Add default blacklist from resource directory.
-  addDefaultBlacklists(D, Kinds, BlacklistFiles);
+  // If the -fno-sanitize-blacklist option is present the list will be cleared
+  // later so there is no need to set the default blacklist.
+  if (!Args.hasArg(options::OPT_fno_sanitize_blacklist))
+    addDefaultBlacklists(D, Kinds, BlacklistFiles);
   // Parse -f(no-)sanitize-blacklist options.
   for (const auto *Arg : Args) {
     if (Arg->getOption().matches(options::OPT_fsanitize_blacklist)) {
