@@ -37,51 +37,75 @@ __FBSDID("$FreeBSD$");
 
 #include <machine/bus.h>
 
-uint8_t  generic_bs_r_1(void *, bus_space_handle_t, bus_size_t);
-uint16_t generic_bs_r_2(void *, bus_space_handle_t, bus_size_t);
-uint32_t generic_bs_r_4(void *, bus_space_handle_t, bus_size_t);
-uint64_t generic_bs_r_8(void *, bus_space_handle_t, bus_size_t);
+#ifdef KCFI
+#define	BS_FUNC(name) cfi_ ##name
 
-void generic_bs_rm_1(void *, bus_space_handle_t, bus_size_t, uint8_t *,
-    bus_size_t);
-void generic_bs_rm_2(void *, bus_space_handle_t, bus_size_t, uint16_t *,
-    bus_size_t);
-void generic_bs_rm_4(void *, bus_space_handle_t, bus_size_t, uint32_t *,
-    bus_size_t);
-void generic_bs_rm_8(void *, bus_space_handle_t, bus_size_t, uint64_t *,
-    bus_size_t);
+#define	_BS_R(width, type)						\
+type generic_bs_r_##width(void *, bus_space_handle_t, bus_size_t);	\
+static type								\
+cfi_bs_r_##width(void *c, bus_space_handle_t h, bus_size_t o)		\
+{									\
+	return (generic_bs_r_##width(c, h, o));				\
+}
 
-void generic_bs_rr_1(void *, bus_space_handle_t, bus_size_t, uint8_t *,
-    bus_size_t);
-void generic_bs_rr_2(void *, bus_space_handle_t, bus_size_t, uint16_t *,
-    bus_size_t);
-void generic_bs_rr_4(void *, bus_space_handle_t, bus_size_t, uint32_t *,
-    bus_size_t);
-void generic_bs_rr_8(void *, bus_space_handle_t, bus_size_t, uint64_t *,
-    bus_size_t);
+#define	_BS_RM(width, type, func)					\
+void generic_bs_##func##_##width(void *, bus_space_handle_t,		\
+    bus_size_t, type *, bus_size_t);					\
+static void								\
+cfi_bs_##func##_##width(void *c, bus_space_handle_t h, bus_size_t o,	\
+    type *p, bus_size_t l)						\
+{									\
+	generic_bs_##func##_##width(c, h, o, p, l);			\
+}
 
-void generic_bs_w_1(void *, bus_space_handle_t, bus_size_t, uint8_t);
-void generic_bs_w_2(void *, bus_space_handle_t, bus_size_t, uint16_t);
-void generic_bs_w_4(void *, bus_space_handle_t, bus_size_t, uint32_t);
-void generic_bs_w_8(void *, bus_space_handle_t, bus_size_t, uint64_t);
+#define	_BS_W(width, type)						\
+void generic_bs_w_##width(void *, bus_space_handle_t, bus_size_t, type); \
+static void								\
+cfi_bs_w_##width(void *c, bus_space_handle_t h, bus_size_t o, type v)	\
+{									\
+	generic_bs_w_##width(c, h, o, v);				\
+}
 
-void generic_bs_wm_1(void *, bus_space_handle_t, bus_size_t, const uint8_t *,
-    bus_size_t);
-void generic_bs_wm_2(void *, bus_space_handle_t, bus_size_t, const uint16_t *,
-    bus_size_t);
-void generic_bs_wm_4(void *, bus_space_handle_t, bus_size_t, const uint32_t *,
-    bus_size_t);
-void generic_bs_wm_8(void *, bus_space_handle_t, bus_size_t, const uint64_t *,
-    bus_size_t);
+#define	_BS_WM(width, type, func)					\
+void generic_bs_##func##_##width(void *, bus_space_handle_t,		\
+    bus_size_t, const type *, bus_size_t);				\
+static void								\
+cfi_bs_##func##_##width(void *c, bus_space_handle_t h, bus_size_t o,	\
+    const type *p, bus_size_t l)					\
+{									\
+	generic_bs_##func##_##width(c, h, o, p, l);			\
+}
 
-void generic_bs_wr_1(void *, bus_space_handle_t, bus_size_t, const uint8_t *,
-    bus_size_t);
-void generic_bs_wr_2(void *, bus_space_handle_t, bus_size_t, const uint16_t *,
-    bus_size_t);
-void generic_bs_wr_4(void *, bus_space_handle_t, bus_size_t, const uint32_t *,
-    bus_size_t);
-void generic_bs_wr_8(void *, bus_space_handle_t, bus_size_t, const uint64_t *,
-    bus_size_t);
+#else
+#define	BS_FUNC(name) generic_ ##name
+
+#define	_BS_R(width, type)						\
+type generic_bs_r_##width(void *, bus_space_handle_t, bus_size_t);
+
+#define	_BS_RM(width, type, func)					\
+void generic_bs_##func##_##width(void *, bus_space_handle_t,		\
+    bus_size_t, type *, bus_size_t);
+
+#define	_BS_W(width, type)						\
+void generic_bs_w_##width(void *, bus_space_handle_t, bus_size_t, type);
+
+#define	_BS_WM(width, type, func)					\
+void generic_bs_##func##_##width(void *, bus_space_handle_t,		\
+    bus_size_t, const type *, bus_size_t);
+#endif /* KCFI */
+
+#define	BS(width, type)							\
+    _BS_R(width, type)							\
+    _BS_RM(width, type, rm)						\
+    _BS_RM(width, type, rr)						\
+    _BS_W(width, type)							\
+    _BS_WM(width, type, wm)						\
+    _BS_WM(width, type, wr)
+
+BS(1, uint8_t)
+BS(2, uint16_t)
+BS(4, uint32_t)
+BS(8, uint64_t)
 
 static int
 generic_bs_map(void *t, bus_addr_t bpa, bus_size_t size, int flags,
@@ -135,40 +159,40 @@ struct bus_space memmap_bus = {
 	.bs_barrier = generic_bs_barrier,
 
 	/* read single */
-	.bs_r_1 = generic_bs_r_1,
-	.bs_r_2 = generic_bs_r_2,
-	.bs_r_4 = generic_bs_r_4,
-	.bs_r_8 = generic_bs_r_8,
+	.bs_r_1 = BS_FUNC(bs_r_1),
+	.bs_r_2 = BS_FUNC(bs_r_2),
+	.bs_r_4 = BS_FUNC(bs_r_4),
+	.bs_r_8 = BS_FUNC(bs_r_8),
 
 	/* read multiple */
-	.bs_rm_1 = generic_bs_rm_1,
-	.bs_rm_2 = generic_bs_rm_2,
-	.bs_rm_4 = generic_bs_rm_4,
-	.bs_rm_8 = generic_bs_rm_8,
+	.bs_rm_1 = BS_FUNC(bs_rm_1),
+	.bs_rm_2 = BS_FUNC(bs_rm_2),
+	.bs_rm_4 = BS_FUNC(bs_rm_4),
+	.bs_rm_8 = BS_FUNC(bs_rm_8),
 
 	/* read region */
-	.bs_rr_1 = generic_bs_rr_1,
-	.bs_rr_2 = generic_bs_rr_2,
-	.bs_rr_4 = generic_bs_rr_4,
-	.bs_rr_8 = generic_bs_rr_8,
+	.bs_rr_1 = BS_FUNC(bs_rr_1),
+	.bs_rr_2 = BS_FUNC(bs_rr_2),
+	.bs_rr_4 = BS_FUNC(bs_rr_4),
+	.bs_rr_8 = BS_FUNC(bs_rr_8),
 
 	/* write single */
-	.bs_w_1 = generic_bs_w_1,
-	.bs_w_2 = generic_bs_w_2,
-	.bs_w_4 = generic_bs_w_4,
-	.bs_w_8 = generic_bs_w_8,
+	.bs_w_1 = BS_FUNC(bs_w_1),
+	.bs_w_2 = BS_FUNC(bs_w_2),
+	.bs_w_4 = BS_FUNC(bs_w_4),
+	.bs_w_8 = BS_FUNC(bs_w_8),
 
 	/* write multiple */
-	.bs_wm_1 = generic_bs_wm_1,
-	.bs_wm_2 = generic_bs_wm_2,
-	.bs_wm_4 = generic_bs_wm_4,
-	.bs_wm_8 = generic_bs_wm_8,
+	.bs_wm_1 = BS_FUNC(bs_wm_1),
+	.bs_wm_2 = BS_FUNC(bs_wm_2),
+	.bs_wm_4 = BS_FUNC(bs_wm_4),
+	.bs_wm_8 = BS_FUNC(bs_wm_8),
 
 	/* write region */
-	.bs_wr_1 = generic_bs_wr_1,
-	.bs_wr_2 = generic_bs_wr_2,
-	.bs_wr_4 = generic_bs_wr_4,
-	.bs_wr_8 = generic_bs_wr_8,
+	.bs_wr_1 = BS_FUNC(bs_wr_1),
+	.bs_wr_2 = BS_FUNC(bs_wr_2),
+	.bs_wr_4 = BS_FUNC(bs_wr_4),
+	.bs_wr_8 = BS_FUNC(bs_wr_8),
 
 	/* set multiple */
 	.bs_sm_1 = NULL,
@@ -195,10 +219,10 @@ struct bus_space memmap_bus = {
 	.bs_r_8_s = NULL,
 
 	/* read multiple stream */
-	.bs_rm_1_s = generic_bs_rm_1,
-	.bs_rm_2_s = generic_bs_rm_2,
-	.bs_rm_4_s = generic_bs_rm_4,
-	.bs_rm_8_s = generic_bs_rm_8,
+	.bs_rm_1_s = BS_FUNC(bs_rm_1),
+	.bs_rm_2_s = BS_FUNC(bs_rm_2),
+	.bs_rm_4_s = BS_FUNC(bs_rm_4),
+	.bs_rm_8_s = BS_FUNC(bs_rm_8),
 
 	/* read region stream */
 	.bs_rr_1_s = NULL,
@@ -213,10 +237,10 @@ struct bus_space memmap_bus = {
 	.bs_w_8_s = NULL,
 
 	/* write multiple stream */
-	.bs_wm_1_s = generic_bs_wm_1,
-	.bs_wm_2_s = generic_bs_wm_2,
-	.bs_wm_4_s = generic_bs_wm_4,
-	.bs_wm_8_s = generic_bs_wm_8,
+	.bs_wm_1_s = BS_FUNC(bs_wm_1),
+	.bs_wm_2_s = BS_FUNC(bs_wm_2),
+	.bs_wm_4_s = BS_FUNC(bs_wm_4),
+	.bs_wm_8_s = BS_FUNC(bs_wm_8),
 
 	/* write region stream */
 	.bs_wr_1_s = NULL,
