@@ -1023,7 +1023,8 @@ fail2:
  * Handle the return of a child process from fork1().  This function
  * is called from the MD fork_trampoline() entry point.
  */
-void
+/* XXX: __nocfi because callback may be void (*)(void *) */
+void __nocfi
 fork_exit(void (*callout)(void *, struct trapframe *), void *arg,
     struct trapframe *frame)
 {
