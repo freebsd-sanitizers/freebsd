@@ -225,7 +225,7 @@ symbol_name(vm_offset_t va, db_strategy_t strategy)
  * (for instance, a scheduler, kernel profiler, or VM system) by object
  * module.  Finally, it allows for optional "kernel threads".
  */
-void
+void __nocfi
 mi_startup(void)
 {
 
