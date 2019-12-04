@@ -54,6 +54,15 @@ __FBSDID("$FreeBSD$");
 #endif
 #include <security/audit/audit.h>
 
+/* Hack to disable CFI on just this function call */
+/* XXX: Should we fix the syscall callbacks to take a void *? */
+static inline int __nocfi
+_sys_call(struct syscall_args *sa, struct thread *td)
+{
+
+	return ((sa->callp->sy_call)(td, sa->args));
+}
+
 static inline void
 syscallenter(struct thread *td)
 {
@@ -141,7 +150,7 @@ syscallenter(struct thread *td)
 	td->td_pflags &= ~TDP_NERRNO;
 
 	AUDIT_SYSCALL_ENTER(sa->code, td);
-	error = (sa->callp->sy_call)(td, sa->args);
+	error = _sys_call(sa, td);
 	AUDIT_SYSCALL_EXIT(error, td);
 
 	/* Save the latest error return value. */
