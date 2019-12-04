@@ -333,7 +333,7 @@ SYSCTL_INT(_machdep, OID_AUTO, efi_rt_handle_faults, CTLFLAG_RWTUN,
     &efi_rt_handle_faults, 0,
     "Call EFI RT methods with fault handler wrapper around");
 
-static int
+static int __nocfi
 efi_rt_arch_call_nofault(struct efirt_callinfo *ec)
 {
 
